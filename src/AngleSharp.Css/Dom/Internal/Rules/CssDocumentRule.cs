@@ -48,6 +48,7 @@ namespace AngleSharp.Css.Dom
             base.ReplaceWith(rule);
             var newRule = (ICssDocumentRule)rule;
             _conditions.Clear();
+            MarkChanged();
             _conditions.AddRange(newRule.Conditions);
         }
 
@@ -56,6 +57,7 @@ namespace AngleSharp.Css.Dom
             var factory = Owner.Context.GetService<IDocumentFunctionFactory>();
             var conditions = DocumentFunctionParser.Parse(value, factory);
             _conditions.Clear();
+            MarkChanged();
 
             if (conditions != null)
             {

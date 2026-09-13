@@ -2,6 +2,7 @@
 
 Released on Saturday, September 12 2026
 
+- Added a synchronous stylesheet mutation version for CSSOM cache invalidation without DOM mutation records
 - Improved pseudo-class matching to skip a per-element `ConditionalWeakTable` probe when no state has ever been forced via `SetPseudoClass`
 
 # 1.1.2

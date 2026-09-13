@@ -13,14 +13,16 @@ namespace AngleSharp.Css.Dom
         #region Fields
 
         private readonly List<ICssRule> _rules;
+        private readonly ICssMutationTracker _owner;
 
         #endregion
 
         #region ctor
 
-        internal CssRuleList()
+        internal CssRuleList(ICssMutationTracker owner)
         {
             _rules = new List<ICssRule>();
+            _owner = owner;
         }
 
         #endregion
@@ -74,6 +76,7 @@ namespace AngleSharp.Css.Dom
         public void Clear()
         {
             _rules.Clear();
+            _owner.MarkChanged();
         }
 
         public void RemoveAt(Int32 index)
@@ -98,6 +101,7 @@ namespace AngleSharp.Css.Dom
                 if (index >= 0)
                 {
                     _rules.RemoveAt(index);
+                    _owner.MarkChanged();
                 }
             }
         }
@@ -121,10 +125,12 @@ namespace AngleSharp.Css.Dom
             if (actualIndex == _rules.Count)
             {
                 _rules.Add(rule);
+                _owner.MarkChanged();
             }
             else
             {
                 _rules.Insert(actualIndex, rule);
+                _owner.MarkChanged();
             }
         }
 
@@ -133,6 +139,7 @@ namespace AngleSharp.Css.Dom
             if (rule != null)
             {
                 _rules.Add(rule);
+                _owner.MarkChanged();
             }
         }
 
@@ -145,6 +152,7 @@ namespace AngleSharp.Css.Dom
 
             var oldLength = _rules.Count;
             _rules.AddRange(rules);
+            _owner.MarkChanged();
         }
 
         internal IEnumerable<IStyleFormattable> GetFormattables() => _rules;

@@ -32,7 +32,7 @@ namespace AngleSharp.Css.Dom
         public String CharacterSet
         {
             get => _charSet;
-            set => _charSet = value ?? String.Empty;
+            set { _charSet = value ?? String.Empty; MarkChanged(); }
         }
 
         #endregion

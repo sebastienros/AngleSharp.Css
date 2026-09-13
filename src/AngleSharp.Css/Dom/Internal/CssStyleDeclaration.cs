@@ -14,7 +14,7 @@ namespace AngleSharp.Css.Dom
     /// <summary>
     /// Represents a single CSS declaration block.
     /// </summary>
-    sealed class CssStyleDeclaration : ICssStyleDeclaration
+    sealed class CssStyleDeclaration : ICssStyleDeclaration, ICssMutationTracker
     {
         #region Fields
 
@@ -120,7 +120,12 @@ namespace AngleSharp.Css.Dom
 
                     if (decl != null)
                     {
-                        _declarations.AddRange(decl);
+                        foreach (var property in decl)
+                        {
+                            Track(property);
+                            _declarations.Add(property);
+                        }
+
                         RebuildIndex();
                     }
                 }
@@ -321,6 +326,7 @@ namespace AngleSharp.Css.Dom
 
         public void AddProperty(ICssProperty declaration)
         {
+            Track(declaration);
             _declarationIndex[declaration.Name] = _declarations.Count;
             _declarations.Add(declaration);
         }
@@ -482,6 +488,7 @@ namespace AngleSharp.Css.Dom
 
                 if (!skip)
                 {
+                    Track(newdecl);
                     declarations.Add(newdecl);
                 }
             }
@@ -493,6 +500,7 @@ namespace AngleSharp.Css.Dom
 
         private void SetLonghand(ICssProperty property)
         {
+            Track(property);
             if (_declarationIndex.TryGetValue(property.Name, out var index) && index < _declarations.Count)
             {
                 var declaration = _declarations[index];
@@ -572,10 +580,21 @@ namespace AngleSharp.Css.Dom
             }
         }
 
+        public void MarkChanged() => (_parent as CssRule)?.MarkChanged();
+
+        private void Track(ICssProperty property)
+        {
+            if (_parent is CssRule && property is CssProperty css)
+            {
+                css.MutationOwner = this;
+            }
+        }
+
         private void RaiseChanged()
         {
             if (!_updating)
             {
+                MarkChanged();
                 _updating = true;
                 Changed?.Invoke(CssText);
                 _updating = false;

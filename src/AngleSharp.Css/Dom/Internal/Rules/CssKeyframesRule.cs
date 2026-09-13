@@ -33,7 +33,7 @@ namespace AngleSharp.Css.Dom
         public String Name
         {
             get => _name;
-            set => _name = value;
+            set { _name = value; MarkChanged(); }
         }
 
         #endregion

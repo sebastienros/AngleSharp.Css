@@ -62,11 +62,13 @@ namespace AngleSharp.Css.Dom
                     if (parsed != null && source.IsDone && parsed is not CssVarValue)
                     {
                         _value = parsed;
+                        MutationOwner?.MarkChanged();
                         return;
                     }
                 }
 
                 _value = _converter.Convert(value);
+                MutationOwner?.MarkChanged();
             }
         }
 
@@ -89,7 +91,7 @@ namespace AngleSharp.Css.Dom
         public Boolean IsImportant
         {
             get => _important;
-            set => _important = value;
+            set { _important = value; MutationOwner?.MarkChanged(); }
         }
 
         public String CssText => this.ToCss();
@@ -97,6 +99,8 @@ namespace AngleSharp.Css.Dom
         #endregion
 
         #region Internal Properties
+
+        internal ICssMutationTracker MutationOwner { get; set; }
 
         internal Boolean CanBeHashless => (_flags & PropertyFlags.Hashless) == PropertyFlags.Hashless;
 

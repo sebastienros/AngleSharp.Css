@@ -32,7 +32,7 @@ namespace AngleSharp.Css.Dom
             : base(owner, CssRuleType.Style)
         {
             _style = new CssStyleDeclaration(this);
-            _rules = new CssRuleList();
+            _rules = new CssRuleList(this);
             _selectorList = null;
         }
 
@@ -158,6 +158,7 @@ namespace AngleSharp.Css.Dom
         {
             _selectorList = null;
             _selector = value;
+            MarkChanged();
             value?.Accept(this);
         }
 

@@ -13,6 +13,19 @@ namespace AngleSharp.Dom
     public static class StyleSheetExtensions
     {
         /// <summary>
+        /// Gets the synchronous CSSOM mutation version of an AngleSharp stylesheet.
+        /// </summary>
+        /// <param name="sheet">The stylesheet to inspect.</param>
+        /// <returns>An opaque version, or null for an unsupported implementation.</returns>
+        /// <remarks>
+        /// Compare readings for equality, on the owning thread. No-op writes may advance the
+        /// version. Track imported sheets separately, along with document and render-device state.
+        /// Custom rules, selectors, properties and value objects need their own invalidation signal.
+        /// </remarks>
+        public static Int64? GetMutationVersion(this ICssStyleSheet sheet) =>
+            sheet is CssStyleSheet css ? css.MutationVersion : null;
+
+        /// <summary>
         /// Gets all rules that are of the provided type.
         /// </summary>
         /// <typeparam name="TRule">The type of rules to get.</typeparam>

@@ -62,6 +62,7 @@ namespace AngleSharp.Css.Dom
                 if (declaration.Name.Is(propertyName))
                 {
                     _declarations.RemoveAt(i);
+                    MarkChanged();
                     return declaration.Value;
                 }
             }
@@ -129,6 +130,13 @@ namespace AngleSharp.Css.Dom
                     // of storing an empty declaration that would serialize as "name: ".
                     return;
                 }
+
+                if (property is CssProperty css)
+                {
+                    css.MutationOwner = this;
+                }
+
+                MarkChanged();
 
                 for (var i = 0; i < _declarations.Count; i++)
                 {

@@ -16,7 +16,13 @@ namespace AngleSharp.Css.Dom
         {
         }
 
-        public String ScopeText { get; set; }
+        private String _scopeText;
+
+        public String ScopeText
+        {
+            get => _scopeText;
+            set { _scopeText = value; MarkChanged(); }
+        }
 
         protected override void ReplaceWith(ICssRule rule)
         {

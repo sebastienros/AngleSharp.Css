@@ -21,7 +21,7 @@ namespace AngleSharp.Css.Dom
         internal CssMediaRule(ICssStyleSheet owner)
             : base(owner, CssRuleType.Media)
         {
-            _media = new MediaList(owner.Context);
+            _media = new MediaList(owner.Context, this);
         }
 
         #endregion

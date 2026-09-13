@@ -68,6 +68,7 @@ namespace AngleSharp.Css.Dom
                 if (property is not null)
                 {
                     _descriptors.Remove(property);
+                    MarkChanged();
                 }
 
                 return;
@@ -75,7 +76,7 @@ namespace AngleSharp.Css.Dom
 
             if (property is null)
             {
-                property = new DescriptorProperty(propertyName);
+                property = new DescriptorProperty(propertyName, this);
                 _descriptors.Add(property);
             }
 
@@ -92,6 +93,7 @@ namespace AngleSharp.Css.Dom
                 if (descriptor.Name.Is(propertyName))
                 {
                     _descriptors.RemoveAt(i);
+                    MarkChanged();
                     return descriptor.Value;
                 }
             }
@@ -128,19 +130,23 @@ namespace AngleSharp.Css.Dom
         private sealed class DescriptorProperty : ICssProperty
         {
             private readonly String _name;
+            private readonly CssRule _owner;
+            private String _value = String.Empty;
+            private Boolean _important;
 
-            public DescriptorProperty(String name)
+            public DescriptorProperty(String name, CssRule owner)
             {
                 _name = name;
+                _owner = owner;
             }
 
             public String Name => _name;
 
             public ICssValue RawValue => null;
 
-            public String Value { get; set; } = String.Empty;
+            public String Value { get => _value; set { _value = value; _owner.MarkChanged(); } }
 
-            public Boolean IsImportant { get; set; }
+            public Boolean IsImportant { get => _important; set { _important = value; _owner.MarkChanged(); } }
 
             public Boolean IsInherited => false;
 

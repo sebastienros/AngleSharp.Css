@@ -34,7 +34,7 @@ namespace AngleSharp.Css.Dom
         public String KeyText
         {
             get => _selector?.ToCss();
-            set => _selector = KeyframeParser.Parse(value);
+            set { _selector = KeyframeParser.Parse(value); MarkChanged(); }
         }
 
         public IKeyframeSelector Key => _selector;

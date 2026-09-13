@@ -17,6 +17,7 @@ namespace AngleSharp.Css.Dom
         #region Fields
 
         private readonly IBrowsingContext _context;
+        private readonly ICssMutationTracker _owner;
         private readonly List<ICssMedium> _media;
 
         private static readonly CssMedium replacementMedium = new(CssKeywords.All, inverse: true, exclusive: false);
@@ -25,9 +26,10 @@ namespace AngleSharp.Css.Dom
 
         #region ctor
 
-        internal MediaList(IBrowsingContext context)
+        internal MediaList(IBrowsingContext context, ICssMutationTracker owner = null)
         {
             _context = context;
+            _owner = owner;
             _media = new List<ICssMedium>();
         }
 
@@ -60,6 +62,7 @@ namespace AngleSharp.Css.Dom
         public void SetMediaText(String value, Boolean throwOnError)
         {
             _media.Clear();
+            _owner?.MarkChanged();
             var v = String.IsNullOrEmpty(value) ? String.Empty : value;
             var media = MediaParser.Parse(v, ValidatorFactory) ?? Enumerable.Repeat<CssMedium>(null, 1);
 
@@ -75,6 +78,7 @@ namespace AngleSharp.Css.Dom
         {
             var medium = MediumParser.Parse(newMedium, ValidatorFactory) ?? throw new DomException(DomError.Syntax);
             _media.Add(medium);
+            _owner?.MarkChanged();
         }
 
         public void Remove(String oldMedium)
@@ -86,6 +90,7 @@ namespace AngleSharp.Css.Dom
                 if (_media[i].Equals(medium))
                 {
                     _media.RemoveAt(i);
+                    _owner?.MarkChanged();
                     return;
                 }
             }
@@ -96,6 +101,7 @@ namespace AngleSharp.Css.Dom
         public void Replace(IEnumerable<ICssMedium> media)
         {
             _media.Clear();
+            _owner?.MarkChanged();
             _media.AddRange(media);
         }
 

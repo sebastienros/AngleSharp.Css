@@ -9,7 +9,7 @@ namespace AngleSharp.Css.Dom
     /// <summary>
     /// Represents a CSS rule.
     /// </summary>
-    abstract class CssRule : ICssRule
+    abstract class CssRule : ICssRule, ICssMutationTracker
     {
         #region Fields
         
@@ -46,6 +46,7 @@ namespace AngleSharp.Css.Dom
                     throw new DomException(DomError.InvalidModification);
 
                 ReplaceWith(rule);
+                MarkChanged();
             }
         }
 
@@ -94,6 +95,19 @@ namespace AngleSharp.Css.Dom
         #endregion
 
         #region Helpers
+
+        public void MarkChanged()
+        {
+            // Resolve through the current parent: a detached group may later join another sheet.
+            if (_parent is CssRule parent)
+            {
+                parent.MarkChanged();
+            }
+            else if (_owner is CssStyleSheet sheet)
+            {
+                sheet.MarkChanged();
+            }
+        }
 
         protected abstract void ReplaceWith(ICssRule rule);
 

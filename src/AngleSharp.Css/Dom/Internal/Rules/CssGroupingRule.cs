@@ -20,7 +20,7 @@ namespace AngleSharp.Css.Dom
         internal CssGroupingRule(ICssStyleSheet owner, CssRuleType type)
             : base(owner, type)
         {
-            _rules = new CssRuleList();
+            _rules = new CssRuleList(this);
         }
 
         #endregion

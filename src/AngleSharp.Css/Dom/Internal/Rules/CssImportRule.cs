@@ -24,7 +24,7 @@ namespace AngleSharp.Css.Dom
         internal CssImportRule(ICssStyleSheet owner)
             : base(owner, CssRuleType.Import)
         {
-            _media = new MediaList(owner.Context);
+            _media = new MediaList(owner.Context, this);
         }
 
         #endregion
@@ -44,7 +44,7 @@ namespace AngleSharp.Css.Dom
         public ICssStyleSheet Sheet
         {
             get => _styleSheet;
-            set { _styleSheet = value; _styleSheet?.SetParent(Owner); }
+            set { _styleSheet = value; _styleSheet?.SetParent(Owner); MarkChanged(); }
         }
 
         #endregion

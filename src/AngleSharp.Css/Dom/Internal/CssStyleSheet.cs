@@ -12,7 +12,7 @@ namespace AngleSharp.Css.Dom
     /// <summary>
     /// Represents a CSS Stylesheet.
     /// </summary>
-    sealed class CssStyleSheet : ICssStyleSheet
+    sealed class CssStyleSheet : ICssStyleSheet, ICssMutationTracker
     {
         #region Fields
 
@@ -23,6 +23,8 @@ namespace AngleSharp.Css.Dom
         private ICssStyleSheet _parent;
         private ICssRule _owner;
         private IElement _element;
+        private Int64 _mutationVersion;
+        private Boolean _disabled;
 
         #endregion
 
@@ -32,8 +34,8 @@ namespace AngleSharp.Css.Dom
         {
             _context = context;
             _source = source;
-            _media = new MediaList(context);
-            _rules = new CssRuleList();
+            _media = new MediaList(context, this);
+            _rules = new CssRuleList(this);
         }
 
         #endregion
@@ -54,9 +56,13 @@ namespace AngleSharp.Css.Dom
 
         public Boolean IsDisabled
         {
-            get;
-            set;
+            get => _disabled;
+            set { _disabled = value; MarkChanged(); }
         }
+
+        internal Int64 MutationVersion => _mutationVersion;
+
+        public void MarkChanged() => _mutationVersion++;
 
         public IElement OwnerNode => _element;
 

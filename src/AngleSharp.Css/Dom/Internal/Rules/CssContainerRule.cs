@@ -73,6 +73,7 @@ namespace AngleSharp.Css.Dom
 
             _containerName = name;
             _containerQuery = query;
+            MarkChanged();
             return true;
         }
 

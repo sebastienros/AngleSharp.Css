@@ -34,13 +34,13 @@ namespace AngleSharp.Css.Dom
         public String NamespaceUri
         {
             get => _namespaceUri;
-            set { CheckValidity(); _namespaceUri = value ?? String.Empty; }
+            set { CheckValidity(); _namespaceUri = value ?? String.Empty; MarkChanged(); }
         }
 
         public String Prefix
         {
             get => _prefix;
-            set { CheckValidity(); _prefix = value ?? String.Empty; }
+            set { CheckValidity(); _prefix = value ?? String.Empty; MarkChanged(); }
         }
 
         #endregion
