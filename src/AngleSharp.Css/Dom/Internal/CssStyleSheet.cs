@@ -35,7 +35,13 @@ namespace AngleSharp.Css.Dom
             _context = context;
             _source = source;
             _media = new MediaList(context, this);
-            _rules = new CssRuleList(this);
+            _rules = new CssRuleList();
+        }
+
+        internal CssStyleSheet(IBrowsingContext context, TextSource source, Boolean disabled)
+            : this(context, source)
+        {
+            _disabled = disabled;
         }
 
         #endregion
@@ -57,7 +63,14 @@ namespace AngleSharp.Css.Dom
         public Boolean IsDisabled
         {
             get => _disabled;
-            set { _disabled = value; MarkChanged(); }
+            set
+            {
+                if (_disabled != value)
+                {
+                    _disabled = value;
+                    MarkChanged();
+                }
+            }
         }
 
         internal Int64 MutationVersion => _mutationVersion;
@@ -94,6 +107,7 @@ namespace AngleSharp.Css.Dom
         public void Remove(ICssRule rule)
         {
             _rules.Remove(rule);
+            MarkChanged();
             rule.SetOwner(null);
         }
 
@@ -111,6 +125,7 @@ namespace AngleSharp.Css.Dom
             var parser = _context.GetService<ICssParser>();
             var rule = parser.ParseRule(this, ruleText);
             _rules.Insert(index, rule);
+            MarkChanged();
             rule.SetOwner(this);
             return index;            
         }

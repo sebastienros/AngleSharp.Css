@@ -1,10 +1,17 @@
 namespace AngleSharp.Css.Tests.Rules
 {
     using AngleSharp.Css.Dom;
+    using AngleSharp.Css.Dom.Events;
+    using AngleSharp.Css.Parser;
+    using AngleSharp.Css.Tests.Mocks;
+    using AngleSharp.Io;
     using AngleSharp.Dom;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using static CssConstructionFunctions;
 
@@ -46,7 +53,7 @@ namespace AngleSharp.Css.Tests.Rules
         {
             var sheet = ParseStyleSheet(css);
             var before = sheet.GetMutationVersion();
-            Assert.IsNotNull(before);
+            Assert.AreEqual(0, before, "Constructing a stylesheet must not advance its version.");
 
             change(sheet.Rules[0]);
 
@@ -54,6 +61,87 @@ namespace AngleSharp.Css.Tests.Rules
             var after = sheet.GetMutationVersion();
             Assert.IsNotNull(sheet.ToCss());
             Assert.AreEqual(after, sheet.GetMutationVersion(), "Reading CSS must not invalidate it.");
+        }
+
+        [TestCase("@charset 'utf-8'; @import 'a.css' screen; @namespace x 'urn:x'; x|a { color: red !important }")]
+        [TestCase("@document url('https://example.org') { a { color: red } }")]
+        [TestCase("@supports (display: block) { @container (width > 1px) { a { & b { display: none } } } }")]
+        [TestCase("@property --x { syntax: '*'; inherits: false } @font-face { font-family: a; src: url(a.woff) }")]
+        [TestCase("@scope (.a) { a {} } @keyframes a { from { opacity: 0 } } @page :left { margin: 1px }")]
+        [TestCase("@media screen { a { color: red } } @supports INVALID {} b { color: red; invalid }")]
+        public async Task SyncAndAsyncConstructionLeaveVersionAtZero(String css)
+        {
+            var parser = new CssParser();
+            var synchronous = parser.ParseStyleSheet(css);
+            var asynchronous = await parser.ParseStyleSheetAsync(css).ConfigureAwait(false);
+
+            Assert.Greater(synchronous.Rules.Length, 0);
+            Assert.AreEqual(0, synchronous.GetMutationVersion());
+            Assert.AreEqual(0, asynchronous.GetMutationVersion());
+        }
+
+        [TestCase("@media screen { a { color: red } }")]
+        [TestCase("@font-face { font-family: a }")]
+        [TestCase("@property --x { syntax: '*'; inherits: false }")]
+        [TestCase("@supports INVALID {}")]
+        public void ParsingARuleDoesNotMutateItsOwner(String css)
+        {
+            var parser = new CssParser();
+            var sheet = parser.ParseStyleSheet("a {}");
+            sheet.IsDisabled = true;
+            var before = sheet.GetMutationVersion();
+
+            parser.ParseRule(sheet, css);
+
+            Assert.AreEqual(before, sheet.GetMutationVersion());
+            Assert.AreEqual(1, sheet.Rules.Length);
+        }
+
+        [Test]
+        public void ConstructionDoesNotResetUserMutationsInParseCallbacks()
+        {
+            var parser = new CssParser();
+            Int64? afterUserMutation = null;
+            parser.Parsing += (_, ev) =>
+            {
+                var sheet = ((CssParseEvent)ev).StyleSheet;
+                Assert.AreEqual(0, sheet.GetMutationVersion());
+                sheet.IsDisabled = true;
+                afterUserMutation = sheet.GetMutationVersion();
+            };
+
+            var result = parser.ParseStyleSheet("@media screen { a { display: block } }");
+
+            Assert.Greater(afterUserMutation, 0);
+            Assert.AreEqual(afterUserMutation, result.GetMutationVersion());
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task LoadingAStylesheetAndItsImportsLeavesVersionsAtZero(Boolean disabled)
+        {
+            var files = new Dictionary<String, String> { { "child.css", "a { color: red }" } };
+            var config = Configuration.Default.With(new TestServerRequester(files))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true }).WithCss();
+            using var context = BrowsingContext.New(config);
+            var document = await context.OpenAsync(req => req.Address("http://localhost/index.html")
+                .Content("<style></style>")).ConfigureAwait(false);
+            using var response = new DefaultResponse
+            {
+                Address = new Url("http://localhost/parent.css"),
+                Content = new MemoryStream(Encoding.UTF8.GetBytes("@import 'child.css';"))
+            };
+            var options = new StyleOptions(document) { Element = document.QuerySelector("style"), IsDisabled = disabled };
+
+            var sheet = (ICssStyleSheet)await new CssStylingService()
+                .ParseStylesheetAsync(response, options, CancellationToken.None).ConfigureAwait(false);
+            var imported = ((ICssImportRule)sheet.Rules[0]).Sheet;
+
+            Assert.AreEqual(disabled, sheet.IsDisabled);
+            Assert.IsNotNull(imported);
+            Assert.AreEqual(1, imported!.Rules.Length);
+            Assert.AreEqual(0, sheet.GetMutationVersion());
+            Assert.AreEqual(0, imported.GetMutationVersion());
         }
 
         [Test]
@@ -92,6 +180,25 @@ namespace AngleSharp.Css.Tests.Rules
         }
 
         [Test]
+        public void ReentrantDeclarationMutationAdvancesVersionWithoutRepeatingCallbacks()
+        {
+            var sheet = ParseStyleSheet("a { display: block }");
+            var style = (CssStyleDeclaration)((ICssStyleRule)sheet.Rules[0]).Style;
+            var callbacks = 0;
+            style.Changed += _ =>
+            {
+                callbacks++;
+                var before = sheet.GetMutationVersion();
+                style.SetProperty("color", "red");
+                Assert.AreNotEqual(before, sheet.GetMutationVersion());
+            };
+
+            style.SetProperty("display", "none");
+
+            Assert.AreEqual(1, callbacks);
+        }
+
+        [Test]
         public void InvalidMediaThatClearsStateStillAdvancesVersion()
         {
             var sheet = ParseStyleSheet("a {}");
@@ -126,6 +233,7 @@ namespace AngleSharp.Css.Tests.Rules
             using var context = BrowsingContext.New(Configuration.Default.WithCss());
             var document = await context.OpenAsync(req => req.Content("<style>div { display: block }</style><div></div>")).ConfigureAwait(false);
             var sheet = (ICssStyleSheet)document.StyleSheets[0]!;
+            Assert.AreEqual(0, sheet.GetMutationVersion());
             var rule = (ICssStyleRule)sheet.Rules[0];
             var markup = document.DocumentElement.OuterHtml;
             var records = 0;

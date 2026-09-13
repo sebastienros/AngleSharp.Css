@@ -277,7 +277,6 @@ namespace AngleSharp.Css.Parser
                 var source = new TextSource(response.Content);
                 var sheet = new CssStyleSheet(_context, source)
                 {
-                    IsDisabled = false,
                     Href = url
                 };
                 sheet.SetParent(parent);

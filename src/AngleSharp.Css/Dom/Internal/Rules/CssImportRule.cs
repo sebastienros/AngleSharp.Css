@@ -44,7 +44,7 @@ namespace AngleSharp.Css.Dom
         public ICssStyleSheet Sheet
         {
             get => _styleSheet;
-            set { _styleSheet = value; _styleSheet?.SetParent(Owner); MarkChanged(); }
+            set { _styleSheet = value; _styleSheet?.SetParent(Owner); }
         }
 
         #endregion

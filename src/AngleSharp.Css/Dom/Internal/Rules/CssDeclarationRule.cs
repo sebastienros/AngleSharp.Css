@@ -11,7 +11,7 @@ namespace AngleSharp.Css.Dom
     /// <summary>
     /// Represents the base class for all style-rule similar rules.
     /// </summary>
-    abstract class CssDeclarationRule : CssRule, ICssProperties
+    abstract class CssDeclarationRule : CssRule, ICssProperties, ICssDeclarationBuilder
     {
         #region Fields
 
@@ -84,7 +84,7 @@ namespace AngleSharp.Css.Dom
 
         #region Helpers
 
-        private ICssProperty CreateNewProperty(String propertyName)
+        private CssProperty CreateNewProperty(String propertyName)
         {
             // Descriptors of the rule itself are always created. Anything else is
             // kept only when unknown declarations are included - the same switch
@@ -113,6 +113,15 @@ namespace AngleSharp.Css.Dom
 
         protected void SetValue(String propertyName, String valueText)
         {
+            InitializeValue(propertyName, valueText);
+            MarkChanged();
+        }
+
+        void ICssDeclarationBuilder.SetProperty(String name, String value, String priority) =>
+            InitializeValue(name, value);
+
+        private void InitializeValue(String propertyName, String valueText)
+        {
             if (!String.IsNullOrEmpty(valueText))
             {
                 var property = CreateNewProperty(propertyName);
@@ -135,8 +144,6 @@ namespace AngleSharp.Css.Dom
                 {
                     css.MutationOwner = this;
                 }
-
-                MarkChanged();
 
                 for (var i = 0; i < _declarations.Count; i++)
                 {

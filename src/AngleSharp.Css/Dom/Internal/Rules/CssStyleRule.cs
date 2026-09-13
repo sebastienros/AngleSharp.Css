@@ -32,7 +32,7 @@ namespace AngleSharp.Css.Dom
             : base(owner, CssRuleType.Style)
         {
             _style = new CssStyleDeclaration(this);
-            _rules = new CssRuleList(this);
+            _rules = new CssRuleList();
             _selectorList = null;
         }
 
@@ -55,7 +55,7 @@ namespace AngleSharp.Css.Dom
         public String SelectorText
         {
             get => _selector?.Text;
-            set => ChangeSelector(ParseSelector(value));
+            set { InitializeSelectorText(value); MarkChanged(); }
         }
 
         ICssStyleDeclaration ICssStyleRule.Style => _style;
@@ -154,11 +154,12 @@ namespace AngleSharp.Css.Dom
 
         #region Selector
 
+        internal void InitializeSelectorText(String value) => ChangeSelector(ParseSelector(value));
+
         internal void ChangeSelector(ISelector value)
         {
             _selectorList = null;
             _selector = value;
-            MarkChanged();
             value?.Accept(this);
         }
 

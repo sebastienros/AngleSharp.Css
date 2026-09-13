@@ -34,7 +34,7 @@ namespace AngleSharp.Css.Dom
         public String SelectorText
         {
             get => _selector?.Text;
-            set { _selector = ParseSelector(value); MarkChanged(); }
+            set { InitializeSelectorText(value); MarkChanged(); }
         }
 
         public ISelector Selector => _selector;
@@ -51,6 +51,8 @@ namespace AngleSharp.Css.Dom
         {
             _selector = new InvalidSelector(selectorText);
         }
+
+        internal void InitializeSelectorText(String value) => _selector = ParseSelector(value);
 
         protected override void ReplaceWith(ICssRule rule)
         {

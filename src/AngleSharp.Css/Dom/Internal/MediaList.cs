@@ -52,7 +52,18 @@ namespace AngleSharp.Css.Dom
         public String MediaText
         {
             get => this.ToCss();
-            set => SetMediaText(value, throwOnError: true);
+            set
+            {
+                // Core initializes an attached sheet's empty media through this public setter.
+                if (_media.Count == 0 && String.IsNullOrEmpty(value))
+                {
+                    return;
+                }
+
+                _media.Clear();
+                _owner?.MarkChanged();
+                FillMediaText(value, throwOnError: true);
+            }
         }
 
         #endregion
@@ -62,7 +73,11 @@ namespace AngleSharp.Css.Dom
         public void SetMediaText(String value, Boolean throwOnError)
         {
             _media.Clear();
-            _owner?.MarkChanged();
+            FillMediaText(value, throwOnError);
+        }
+
+        private void FillMediaText(String value, Boolean throwOnError)
+        {
             var v = String.IsNullOrEmpty(value) ? String.Empty : value;
             var media = MediaParser.Parse(v, ValidatorFactory) ?? Enumerable.Repeat<CssMedium>(null, 1);
 

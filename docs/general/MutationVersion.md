@@ -2,6 +2,14 @@
 
 A host that caches stylesheet-derived work can read `sheet.GetMutationVersion()` before and after a query. The nullable `Int64` is an opaque equality token. It advances synchronously for native CSSOM writes, including declaration/property edits, selector and condition changes, rule-list edits, sheet media and disabled state. Reading it allocates nothing. A no-op or failed operation that already changed state may advance it; do not use its magnitude or ordering. Read and mutate on the thread that owns the CSSOM.
 
+Parser construction does not advance the version. Normal synchronous and asynchronous parses finish at
+zero; no counter reset is used, so user mutations made in parser callbacks remain visible. Parsing a
+rule with an existing sheet as its owner also leaves that sheet's version unchanged. User insertion or
+`CssText` replacement publishes the change after installing the parsed result. Parser construction uses
+raw rule-list and declaration operations, and the parser's selector/condition initialization does not
+call the notifying setters. Hosts must invalidate across parsing/resumption and resource/import loading
+boundaries independently; a stylesheet version is not a signal that loading completed.
+
 This is a separate signal from the document's DOM mutations. For example:
 
 ```csharp

@@ -62,14 +62,24 @@ namespace AngleSharp.Css.Dom
                     if (parsed != null && source.IsDone && parsed is not CssVarValue)
                     {
                         _value = parsed;
-                        MutationOwner?.MarkChanged();
                         return;
                     }
                 }
 
                 _value = _converter.Convert(value);
-                MutationOwner?.MarkChanged();
             }
+        }
+
+        String ICssProperty.Value
+        {
+            get => Value;
+            set { Value = value; MutationOwner?.MarkChanged(); }
+        }
+
+        Boolean ICssProperty.IsImportant
+        {
+            get => IsImportant;
+            set { IsImportant = value; MutationOwner?.MarkChanged(); }
         }
 
         public Boolean HasValue => _value != null;
@@ -91,7 +101,7 @@ namespace AngleSharp.Css.Dom
         public Boolean IsImportant
         {
             get => _important;
-            set { _important = value; MutationOwner?.MarkChanged(); }
+            set => _important = value;
         }
 
         public String CssText => this.ToCss();

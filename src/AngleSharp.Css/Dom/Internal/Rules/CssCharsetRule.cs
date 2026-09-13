@@ -32,12 +32,14 @@ namespace AngleSharp.Css.Dom
         public String CharacterSet
         {
             get => _charSet;
-            set { _charSet = value ?? String.Empty; MarkChanged(); }
+            set { InitializeCharacterSet(value); MarkChanged(); }
         }
 
         #endregion
 
         #region Methods
+
+        internal void InitializeCharacterSet(String value) => _charSet = value ?? String.Empty;
 
         protected override void ReplaceWith(ICssRule rule)
         {

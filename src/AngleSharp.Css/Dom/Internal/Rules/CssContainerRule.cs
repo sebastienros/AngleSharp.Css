@@ -48,7 +48,13 @@ namespace AngleSharp.Css.Dom
 
                 return String.Concat(_containerName, " ", _containerQuery);
             }
-            set => SetConditionText(value, throwOnError: true);
+            set
+            {
+                if (SetConditionText(value, throwOnError: true))
+                {
+                    MarkChanged();
+                }
+            }
         }
 
         public String ContainerName => _containerName ?? String.Empty;
@@ -73,7 +79,6 @@ namespace AngleSharp.Css.Dom
 
             _containerName = name;
             _containerQuery = query;
-            MarkChanged();
             return true;
         }
 

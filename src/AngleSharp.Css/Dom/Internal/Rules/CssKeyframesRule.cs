@@ -33,7 +33,7 @@ namespace AngleSharp.Css.Dom
         public String Name
         {
             get => _name;
-            set { _name = value; MarkChanged(); }
+            set { InitializeName(value); MarkChanged(); }
         }
 
         #endregion
@@ -44,6 +44,7 @@ namespace AngleSharp.Css.Dom
         {
             var rule = Parser.ParseKeyframeRule(Owner, ruleText);
             Add(rule);
+            MarkChanged();
         }
 
         public void Remove(String key)
@@ -56,6 +57,8 @@ namespace AngleSharp.Css.Dom
         {
             return Rules.OfType<ICssKeyframeRule>().FirstOrDefault(m => key.Isi(m.KeyText));
         }
+
+        internal void InitializeName(String value) => _name = value;
 
         protected override void ReplaceWith(ICssRule rule)
         {

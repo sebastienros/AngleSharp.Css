@@ -19,7 +19,8 @@ namespace AngleSharp.Dom
         /// <returns>An opaque version, or null for an unsupported implementation.</returns>
         /// <remarks>
         /// Compare readings for equality, on the owning thread. No-op writes may advance the
-        /// version. Track imported sheets separately, along with document and render-device state.
+        /// version. Parser construction leaves it unchanged; invalidate at parser and resource-loading
+        /// boundaries separately. Track imported sheets, document and render-device state independently.
         /// Custom rules, selectors, properties and value objects need their own invalidation signal.
         /// </remarks>
         public static Int64? GetMutationVersion(this ICssStyleSheet sheet) =>

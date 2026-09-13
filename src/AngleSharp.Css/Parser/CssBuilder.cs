@@ -139,7 +139,7 @@ namespace AngleSharp.Css.Parser
 
             if (token.Type == CssTokenType.String)
             {
-                rule.CharacterSet = token.Data;
+                rule.InitializeCharacterSet(token.Data);
             }
 
             JumpToEnd(ref token);
@@ -226,7 +226,7 @@ namespace AngleSharp.Css.Parser
         {
             var token = NextToken();
             CollectTrivia(rule.Owner, ref token);
-            rule.Name = GetRuleName(ref token);
+            rule.InitializeName(GetRuleName(ref token));
             CollectTrivia(rule.Owner, ref token);
 
             if (token.Type != CssTokenType.CurlyBracketOpen)
@@ -265,7 +265,7 @@ namespace AngleSharp.Css.Parser
         {
             var token = NextToken();
             CollectTrivia(rule.Owner, ref token);
-            rule.Prefix = GetRuleName(ref token);
+            rule.InitializePrefix(GetRuleName(ref token));
             CollectTrivia(rule.Owner, ref token);
 
             if (!token.Is(CssTokenType.String, CssTokenType.Url))
@@ -275,7 +275,7 @@ namespace AngleSharp.Css.Parser
                 return null;
             }
 
-            rule.NamespaceUri = token.Data;
+            rule.InitializeNamespaceUri(token.Data);
             JumpToEnd(ref token);
             return rule;
         }
@@ -285,7 +285,7 @@ namespace AngleSharp.Css.Parser
             current = NextToken();
             var selectorText = GetArgument(ref current);
 
-            rule.SelectorText = selectorText;
+            rule.InitializeSelectorText(selectorText);
 
             if (rule.Selector is null && _options.IsToleratingInvalidSelectors)
             {
@@ -403,7 +403,7 @@ namespace AngleSharp.Css.Parser
         {
             var token = NextToken();
             CollectTrivia(rule.Owner, ref token);
-            rule.ScopeText = GetArgument(ref token);
+            rule.InitializeScopeText(GetArgument(ref token));
             CollectTrivia(rule.Owner, ref token);
 
             if (token.Type != CssTokenType.CurlyBracketOpen)
@@ -519,7 +519,7 @@ namespace AngleSharp.Css.Parser
             CollectTrivia(rule.Owner, ref current);
             var selectorText = GetArgument(ref current);
 
-            rule.SelectorText = selectorText;
+            rule.InitializeSelectorText(selectorText);
 
             if (rule.Selector is null && _options.IsToleratingInvalidSelectors)
             {
@@ -540,7 +540,7 @@ namespace AngleSharp.Css.Parser
         {
             CollectTrivia(rule.Owner, ref current);
             var position = current.Position;
-            rule.KeyText = GetArgument(ref current);
+            rule.InitializeKeyText(GetArgument(ref current));
 
             if (rule.Key is null)
             {
@@ -726,7 +726,7 @@ namespace AngleSharp.Css.Parser
         /// <summary>
         /// Called before the property name has been detected.
         /// </summary>
-        public void CreateDeclarationWith(ICssStyleSheet owner, ICssProperties properties, ref CssToken token)
+        public void CreateDeclarationWith(ICssStyleSheet owner, ICssDeclarationBuilder properties, ref CssToken token)
         {
             CollectTrivia(owner, ref token);
             var start = token.Position;

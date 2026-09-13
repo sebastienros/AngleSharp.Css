@@ -9,7 +9,7 @@ namespace AngleSharp.Css.Dom
     using System.Collections.Generic;
     using System.IO;
 
-    abstract class CssDescriptorRule : CssRule, ICssProperties
+    abstract class CssDescriptorRule : CssRule, ICssProperties, ICssDeclarationBuilder
     {
         private readonly List<DescriptorProperty> _descriptors;
         private readonly String _ruleName;
@@ -56,6 +56,15 @@ namespace AngleSharp.Css.Dom
 
         public void SetProperty(String propertyName, String propertyValue, String priority = null)
         {
+            InitializeProperty(propertyName, propertyValue, priority);
+            MarkChanged();
+        }
+
+        void ICssDeclarationBuilder.SetProperty(String name, String value, String priority) =>
+            InitializeProperty(name, value, priority);
+
+        private void InitializeProperty(String propertyName, String propertyValue, String priority)
+        {
             if (String.IsNullOrEmpty(propertyName))
             {
                 return;
@@ -68,7 +77,6 @@ namespace AngleSharp.Css.Dom
                 if (property is not null)
                 {
                     _descriptors.Remove(property);
-                    MarkChanged();
                 }
 
                 return;
@@ -144,9 +152,13 @@ namespace AngleSharp.Css.Dom
 
             public ICssValue RawValue => null;
 
-            public String Value { get => _value; set { _value = value; _owner.MarkChanged(); } }
+            public String Value { get => _value; set => _value = value; }
 
-            public Boolean IsImportant { get => _important; set { _important = value; _owner.MarkChanged(); } }
+            String ICssProperty.Value { get => Value; set { Value = value; _owner.MarkChanged(); } }
+
+            public Boolean IsImportant { get => _important; set => _important = value; }
+
+            Boolean ICssProperty.IsImportant { get => IsImportant; set { IsImportant = value; _owner.MarkChanged(); } }
 
             public Boolean IsInherited => false;
 

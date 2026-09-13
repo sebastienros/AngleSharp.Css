@@ -33,7 +33,13 @@ namespace AngleSharp.Css.Dom
         public String ConditionText
         {
             get => _condition.ToCss();
-            set => SetConditionText(value, throwOnError: true);
+            set
+            {
+                if (SetConditionText(value, throwOnError: true))
+                {
+                    MarkChanged();
+                }
+            }
         }
 
         public IConditionFunction Condition => _condition;
@@ -56,7 +62,6 @@ namespace AngleSharp.Css.Dom
             }
 
             _condition = condition;
-            MarkChanged();
             return true;
         }
 

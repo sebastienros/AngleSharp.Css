@@ -37,9 +37,8 @@ namespace AngleSharp.Css
             var parser = context.GetService<ICssParser>();
             var url = response.Address?.Href;
             var source = new TextSource(response.Content);
-            var sheet = new CssStyleSheet(context, source)
+            var sheet = new CssStyleSheet(context, source, options.IsDisabled)
             {
-                IsDisabled = options.IsDisabled,
                 Href = url
             };
             sheet.SetOwner(options.Element);

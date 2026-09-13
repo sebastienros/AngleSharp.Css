@@ -14,7 +14,7 @@ namespace AngleSharp.Css.Dom
     /// <summary>
     /// Represents a single CSS declaration block.
     /// </summary>
-    sealed class CssStyleDeclaration : ICssStyleDeclaration, ICssMutationTracker
+    sealed class CssStyleDeclaration : ICssStyleDeclaration, ICssMutationTracker, ICssDeclarationBuilder
     {
         #region Fields
 
@@ -291,6 +291,17 @@ namespace AngleSharp.Css.Dom
 
         public void SetProperty(String propertyName, String propertyValue, String priority = null)
         {
+            if (SetPropertyCore(propertyName, propertyValue, priority))
+            {
+                RaiseChanged();
+            }
+        }
+
+        void ICssDeclarationBuilder.SetProperty(String name, String value, String priority) =>
+            SetPropertyCore(name, value, priority);
+
+        private Boolean SetPropertyCore(String propertyName, String propertyValue, String priority)
+        {
             if (IsReadOnly)
                 throw new DomException(DomError.NoModificationAllowed);
             
@@ -313,15 +324,18 @@ namespace AngleSharp.Css.Dom
                         {
                             property.IsImportant = priority is not null;
                             SetProperty(property);
-                            RaiseChanged();
+                            return true;
                         }
                     }
                 }
             }
             else
             {
-                RemoveProperty(propertyName);
+                RemovePropertyByName(propertyName);
+                return true;
             }
+
+            return false;
         }
 
         public void AddProperty(ICssProperty declaration)
@@ -592,9 +606,10 @@ namespace AngleSharp.Css.Dom
 
         private void RaiseChanged()
         {
+            MarkChanged();
+
             if (!_updating)
             {
-                MarkChanged();
                 _updating = true;
                 Changed?.Invoke(CssText);
                 _updating = false;

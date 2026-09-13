@@ -20,7 +20,7 @@ namespace AngleSharp.Css.Dom
         internal CssGroupingRule(ICssStyleSheet owner, CssRuleType type)
             : base(owner, type)
         {
-            _rules = new CssRuleList(this);
+            _rules = new CssRuleList();
         }
 
         #endregion
@@ -53,6 +53,7 @@ namespace AngleSharp.Css.Dom
         {
             var rule = Parser.ParseRule(Owner, ruleText);
             _rules.Insert(index, rule);
+            MarkChanged();
             rule.SetParent(this);
             return index;    
         }
@@ -75,6 +76,7 @@ namespace AngleSharp.Css.Dom
         public void Remove(ICssRule rule)
         {
             _rules.Remove(rule);
+            MarkChanged();
             rule.SetParent(null);
         }
 
